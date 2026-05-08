@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CCIS Complaint System - Student Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        dark: '#0f172a',
+                        card: '#1e293b',
+                        goldLight: '#facc15',
+                        goldDark: '#eab308',
+                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .modal { transition: opacity 0.25s ease, transform 0.25s ease; }
+        .hidden-modal { opacity: 0; pointer-events: none; transform: scale(0.95); }
+        .visible-modal { opacity: 1; pointer-events: auto; transform: scale(1); }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    </style>
+</head>
+<body class="bg-dark text-slate-200 h-screen flex flex-col selection:bg-yellow-500 selection:text-black">
+
+    <nav class="bg-dark/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-20">
+                <div class="flex items-center gap-3">
+                    <div class="h-10 w-10 bg-gradient-to-br from-yellow-300 to-amber-500 rounded-xl flex items-center justify-center text-slate-900 font-extrabold shadow-[0_0_15px_rgba(234,179,8,0.3)]">C</div>
+                    <span class="font-bold text-xl tracking-tight text-white">CCIS <span class="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-500">CMS</span></span>
+                </div>
+                <div class="flex items-center gap-6">
+                    <div class="hidden md:flex flex-col items-end">
+                        <span class="text-sm font-semibold text-white">{{ current_user.first_name }} {{ current_user.last_name }}</span>
+                        <span class="text-xs text-slate-400">Student Account</span>
+                    </div>
+                    <button onclick="openModal('logoutModal')" class="flex items-center gap-2 text-slate-400 hover:text-white transition-colors duration-200 text-sm font-medium border border-slate-700 hover:border-slate-500 px-3 py-1.5 rounded-full">
+                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-1 overflow-y-auto p-4 md:p-8 relative">
+        <div class="absolute top-0 left-1/4 w-96 h-96 bg-yellow-500/10 rounded-full blur-[100px] -z-10 pointer-events-none"></div>
+
+        <div class="max-w-7xl mx-auto space-y-8">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+                <div>
+                    <h1 class="text-3xl font-bold text-white tracking-tight">Dashboard Overview</h1>
+                    <p class="text-slate-400 mt-1">Manage your reports and track their progress.</p>
+                </div>
+                <button onclick="openModal('newComplaintModal')" class="group relative inline-flex items-center justify-center px-6 py-3 font-bold text-slate-900 transition-all duration-200 bg-gradient-to-r from-yellow-300 to-amber-500 rounded-lg focus:outline-none hover:shadow-[0_0_20px_rgba(234,179,8,0.4)] hover:scale-105 active:scale-95">
+                    <svg class="h-5 w-5 mr-2 group-hover:rotate-90 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                    File New Complaint
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                <div class="bg-card border border-slate-700 p-6 rounded-2xl shadow-lg relative overflow-hidden group">
+                    <div class="absolute right-0 top-0 h-16 w-16 bg-blue-500/10 rounded-bl-full transition-all group-hover:bg-blue-500/20"></div>
+                    <p class="text-slate-400 text-sm font-medium">Total Filed</p>
+                    <div class="mt-2 flex items-baseline gap-2">
+                        <span id="statTotal" class="text-4xl font-bold text-white">0</span>
+                        <span class="text-xs text-slate-500">All time</span>
+                    </div>
+                </div>
+                <div class="bg-card border border-yellow-500/30 p-6 rounded-2xl shadow-[0_4px_20px_-5px_rgba(234,179,8,0.15)] relative overflow-hidden group">
+                    <div class="absolute right-0 top-0 h-16 w-16 bg-yellow-500/10 rounded-bl-full transition-all group-hover:bg-yellow-500/20"></div>
+                    <p class="text-yellow-400 text-sm font-medium">Pending Review</p>
+                    <div class="mt-2 flex items-baseline gap-2">
+                        <span id="statPending" class="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 to-yellow-500">0</span>
+                        <span class="text-xs text-yellow-500/60">Awaiting action</span>
+                    </div>
+                </div>
+                <div class="bg-card border border-slate-700 p-6 rounded-2xl shadow-lg relative overflow-hidden group">
+                    <div class="absolute right-0 top-0 h-16 w-16 bg-green-500/10 rounded-bl-full transition-all group-hover:bg-green-500/20"></div>
+                    <p class="text-slate-400 text-sm font-medium">Resolved</p>
+                    <div class="mt-2 flex items-baseline gap-2">
+                        <span id="statResolved" class="text-4xl font-bold text-white">0</span>
+                        <span class="text-xs text-green-400">Successfully closed</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-card/50 backdrop-blur-sm rounded-2xl border border-slate-700 overflow-hidden">
+                <div class="px-6 py-5 border-b border-slate-700 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-800/50">
+                    <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                        <span class="w-1 h-6 bg-yellow-500 rounded-full"></span> Recent History
+                    </h2>
+                    <div class="relative group">
+                        <input type="text" id="searchInput" placeholder="Search..." class="pl-10 pr-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 transition-all w-64 group-hover:bg-slate-900/80">
+                        <svg class="h-4 w-4 text-slate-500 absolute left-3 top-3 group-hover:text-yellow-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-900/50 text-xs uppercase tracking-wider text-slate-400 font-medium">
+                                <th class="px-6 py-4">Complaint Details</th>
+                                <th class="px-6 py-4">Category</th>
+                                <th class="px-6 py-4">Status</th>
+                                <th class="px-6 py-4">Admin Remarks</th>
+                                <th class="px-6 py-4 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="complaintsTableBody" class="divide-y divide-slate-700">
+                            <tr><td colspan="5" class="px-6 py-8 text-center text-slate-500">Loading data...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="newComplaintModal" class="fixed inset-0 z-50 flex items-center justify-center hidden-modal modal">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeModal('newComplaintModal')"></div>
+        <div class="bg-card border border-slate-700 rounded-2xl shadow-2xl w-full max-w-lg relative z-10 m-4 overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-700 bg-slate-900/50 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-white">File New Complaint</h3>
+                <button onclick="closeModal('newComplaintModal')" class="text-slate-500 hover:text-white transition-colors">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
+            
+            <form id="complaintForm" class="p-6 space-y-5">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1 uppercase tracking-wide">Subject</label>
+                    <input type="text" id="c_title" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white focus:ring-1 focus:ring-yellow-500 focus:border-yellow-500 outline-none transition placeholder-slate-600" placeholder="Brief title">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1 uppercase tracking-wide">Category</label>
+                    <div class="relative">
+                        <select id="c_category" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white focus:ring-1 focus:ring-yellow-500 focus:border-yellow-500 outline-none appearance-none">
+                            <option>Academic</option>
+                            <option>Facilities</option>
+                            <option>Administration</option>
+                            <option>Other</option>
+                        </select>
+                        <svg class="w-5 h-5 text-slate-500 absolute right-3 top-3.5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1 uppercase tracking-wide">Description</label>
+                    <textarea id="c_description" required rows="4" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white focus:ring-1 focus:ring-yellow-500 focus:border-yellow-500 outline-none transition resize-none placeholder-slate-600" placeholder="Provide full details..."></textarea>
+                </div>
+                
+                <input type="file" id="c_file" class="hidden" accept=".jpg,.jpeg,.png">
+                <div onclick="document.getElementById('c_file').click()" class="border-2 border-dashed border-slate-700 rounded-xl p-6 text-center hover:bg-slate-700/30 hover:border-yellow-500/50 transition cursor-pointer group">
+                    <div class="bg-slate-800 p-3 rounded-full inline-block mb-3 group-hover:bg-slate-700 transition">
+                        <svg class="h-6 w-6 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                    </div>
+                    <p id="fileNameDisplay" class="text-sm text-slate-300 font-medium">Click to upload evidence</p>
+                    <p class="text-xs text-slate-500 mt-1">PNG, JPG up to 5MB</p>
+                </div>
+            </form>
+            
+            <div class="px-6 py-4 bg-slate-900/50 flex justify-end gap-3 border-t border-slate-700">
+                <button onclick="closeModal('newComplaintModal')" class="px-5 py-2.5 text-sm font-bold text-slate-400 hover:text-white transition">Cancel</button>
+                <button onclick="submitComplaint()" id="submitBtn" class="px-5 py-2.5 text-sm font-bold text-slate-900 bg-gradient-to-r from-yellow-400 to-amber-500 rounded-lg hover:shadow-[0_0_15px_rgba(234,179,8,0.4)] transition transform hover:-translate-y-0.5">Submit Report</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="logoutModal" class="fixed inset-0 z-50 flex items-center justify-center hidden-modal modal">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeModal('logoutModal')"></div>
+        <div class="bg-card border border-slate-700 rounded-2xl shadow-2xl w-full max-w-sm relative z-10 m-4 p-6 text-center">
+            <div class="mx-auto flex items-center justify-center h-14 w-14 rounded-full bg-red-500/10 mb-5 border border-red-500/20">
+                <svg class="h-7 w-7 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+            </div>
+            <h3 class="text-xl font-bold text-white">Logging Out?</h3>
+            <p class="text-slate-400 mt-2 mb-6 text-sm">You will need to sign in again to access your dashboard.</p>
+            <div class="flex justify-center gap-3">
+                <button onclick="closeModal('logoutModal')" class="px-4 py-2.5 w-full border border-slate-600 rounded-lg text-slate-300 hover:bg-slate-700 transition font-medium">Cancel</button>
+                <a href="/logout" class="px-4 py-2.5 w-full bg-red-500 hover:bg-red-600 text-white rounded-lg transition shadow-lg shadow-red-500/30 font-bold flex justify-center items-center">Logout</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+</body>
+</html>

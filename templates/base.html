@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CCIS CMS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        dark: '#0f172a', /* Slate 900 */
+                        card: '#1e293b', /* Slate 800 */
+                        primary: '#facc15', /* Yellow 400 */
+                        primaryDark: '#eab308', /* Yellow 500 */
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-dark text-slate-200 min-h-screen flex flex-col selection:bg-primary selection:text-black">
+
+    <nav class="bg-dark/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="/" class="flex items-center gap-2">
+                <div class="h-8 w-8 bg-gradient-to-br from-yellow-300 to-amber-500 rounded-lg flex items-center justify-center text-slate-900 font-bold shadow-lg shadow-yellow-500/20">C</div>
+                <span class="font-bold text-xl tracking-tight text-white">CCIS <span class="text-primary">CMS</span></span>
+            </a>
+            <div>
+                {% if current_user.is_authenticated %}
+                    <span class="mr-4 text-slate-400 text-sm">Hello, {{ current_user.first_name }}</span>
+                    {% if current_user.role == 'student' %}
+                        <a href="{{ url_for('submit_complaint') }}" class="text-sm font-medium text-white hover:text-primary mr-4 transition">New Complaint</a>
+                    {% endif %}
+                    <a href="{{ url_for('logout') }}" class="px-4 py-2 text-sm font-bold bg-red-500/10 text-red-500 border border-red-500/50 rounded-full hover:bg-red-500 hover:text-white transition">Logout</a>
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="text-sm font-medium text-slate-400 hover:text-white px-4 transition">Login</a>
+                    <a href="{{ url_for('register') }}" class="px-4 py-2 text-sm font-bold bg-primary text-slate-900 rounded-lg hover:bg-primaryDark transition shadow-lg shadow-yellow-500/20">Register</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto mt-6 px-6 relative z-10">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="p-4 mb-4 rounded-lg shadow-lg border backdrop-blur-sm
+                        {% if category == 'success' %} bg-green-500/10 text-green-400 border-green-500/50
+                        {% else %} bg-red-500/10 text-red-400 border-red-500/50 {% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <main class="flex-grow relative">
+        <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-lg h-96 bg-yellow-500/10 rounded-full blur-[120px] -z-10 pointer-events-none"></div>
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="border-t border-slate-800 text-slate-500 text-center py-6 text-sm mt-auto">
+        <p>&copy; 2025 CCIS Department. Confidential.</p>
+    </footer>
+
+    </body>
+</html>
